@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
@@ -45,3 +45,21 @@ jobs:
           pip install -r requirements.txt
       - name: Run Pytest suite
         run: python -m pytest tests/ -v
+
+  test-cpp:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cpp
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and run C++ tests
+        run: |
+          cd tests
+          g++ -std=c++14 -O2 test_algorithms.cpp -o test_algorithms
+          ./test_algorithms
+      - name: Build and verify C++ CLI
+        run: |
+          cd src
+          g++ -std=c++14 -O2 main.cpp -o pathwise_cli
+          ./pathwise_cli
