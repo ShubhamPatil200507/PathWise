@@ -11,10 +11,9 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
-import { Play, Download, CheckCircle, BarChart3, Database, Layers, Sparkles, Loader2 } from 'lucide-react';
+import { Play, Download, Gauge, Loader2 } from 'lucide-react';
 import { AlgorithmId, ALGORITHM_REGISTRY, runAlgorithm } from '../core/runner';
 import { generateRandomMap } from '../core/presets';
-import { MovementMode } from '../core/types';
 
 interface BenchmarkRunRecord {
   algorithm: string;
@@ -29,11 +28,10 @@ interface BenchmarkRunRecord {
 }
 
 export const BenchmarkStudio: React.FC = () => {
-  const [selectedAlgos, setSelectedAlgos] = useState<AlgorithmId[]>(['dijkstra', 'astar', 'greedy']);
+  const [selectedAlgos, setSelectedAlgos] = useState<AlgorithmId[]>(['astar', 'dijkstra', 'greedy']);
   const [gridSizes, setGridSizes] = useState<number[]>([15, 25, 35]);
   const [densities, setDensities] = useState<number[]>([0.1, 0.25, 0.35]);
   const [repetitions, setRepetitions] = useState<number>(3);
-  const [movement, setMovement] = useState<MovementMode>('4-directional');
 
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [progress, setProgress] = useState<{ current: number; total: number }>({ current: 0, total: 0 });
@@ -57,14 +55,12 @@ export const BenchmarkStudio: React.FC = () => {
     const newRecords: BenchmarkRunRecord[] = [];
     let completed = 0;
 
-    // Run synchronously in batches with requestAnimationFrame to prevent browser freezing
     for (const size of gridSizes) {
       const start = { r: 1, c: 1 };
       const target = { r: size - 2, c: size - 2 };
 
       for (const density of densities) {
         for (let rep = 1; rep <= repetitions; rep++) {
-          // Generate deterministic pseudo-random map
           const grid = generateRandomMap(size, size, density, 0.1, start, target);
 
           for (const algoId of selectedAlgos) {
@@ -74,12 +70,12 @@ export const BenchmarkStudio: React.FC = () => {
               grid,
               start,
               target,
-              movement,
+              movement: '4-directional',
               recordEvents: false,
             });
 
             newRecords.push({
-              algorithm: ALGORITHM_REGISTRY[algoId].name,
+              algorithm: ALGORITHM_REGISTRY[algoId].name.split(' ')[0],
               gridSize: size,
               density,
               repetition: rep,
@@ -94,7 +90,6 @@ export const BenchmarkStudio: React.FC = () => {
             setProgress({ current: completed, total: totalRuns });
           }
 
-          // Yield UI thread
           await new Promise((resolve) => setTimeout(resolve, 10));
         }
       }
@@ -104,26 +99,12 @@ export const BenchmarkStudio: React.FC = () => {
     setIsRunning(false);
   };
 
-  // Aggregated data: Runtime vs Grid Size
-  const runtimeVsGridSize = useMemoDataByField(records, 'gridSize', 'executionTimeMs');
+  const runtimeData = useMemoPivotedData(records, 'gridSize', 'executionTimeMs');
+  const cellsCheckedData = useMemoPivotedData(records, 'density', 'nodesExpanded');
 
-  // Aggregated data: Nodes Expanded vs Obstacle Density
-  const nodesVsDensity = useMemoDataByField(records, 'density', 'nodesExpanded');
-
-  // Export results as CSV
   const handleExportCSV = () => {
     if (records.length === 0) return;
-    const headers = [
-      'Algorithm',
-      'GridSize',
-      'ObstacleDensity',
-      'Repetition',
-      'PathFound',
-      'PathCost',
-      'NodesExpanded',
-      'NodesDiscovered',
-      'ExecutionTimeMs',
-    ];
+    const headers = ['Algorithm', 'GridSize', 'ObstacleDensity', 'Repetition', 'PathFound', 'PathCost', 'CellsChecked', 'TimeMs'];
     const rows = records.map((r) => [
       `"${r.algorithm}"`,
       r.gridSize,
@@ -132,7 +113,6 @@ export const BenchmarkStudio: React.FC = () => {
       r.found,
       r.pathCost,
       r.nodesExpanded,
-      r.nodesDiscovered,
       r.executionTimeMs,
     ]);
 
@@ -150,14 +130,14 @@ export const BenchmarkStudio: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Top Header */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-sky-400" />
-            Empirical Benchmark Studio & Algorithmic Evaluation
+          <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+            <Gauge className="w-4 h-4 text-sky-400" />
+            Algorithm Speed & Efficiency Test
           </h2>
-          <p className="text-xs text-slate-400">
-            Execute repeatable scientific experiments across systematically varying grid dimensions, obstacle densities, and repetitions. All measurements are collected in real-time.
+          <p className="text-xs text-zinc-400 mt-0.5">
+            Test and measure algorithm speed and cell expansions across different map sizes.
           </p>
         </div>
 
@@ -165,47 +145,47 @@ export const BenchmarkStudio: React.FC = () => {
           {records.length > 0 && (
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold px-3 py-2 rounded-lg transition"
+              className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-xs font-medium px-3 py-2 rounded-lg transition"
             >
-              <Download className="w-4 h-4 text-emerald-400" />
-              <span>Export CSV</span>
+              <Download className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Download CSV</span>
             </button>
           )}
 
           <button
             onClick={handleRunBenchmarks}
             disabled={isRunning}
-            className="flex items-center gap-2 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-lg active:scale-95 transition"
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition active:scale-95"
           >
             {isRunning ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Running ({progress.current}/{progress.total})...</span>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Testing ({progress.current}/{progress.total})...</span>
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 fill-current" />
-                <span>Execute Benchmark Suite</span>
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span>Run Speed Test</span>
               </>
             )}
           </button>
         </div>
       </div>
 
-      {/* Experimental Setup Controls */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+      {/* Test Settings */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
         {/* Algorithms */}
-        <div className="space-y-2">
-          <span className="font-semibold text-slate-300 block uppercase tracking-wider text-[10px]">Algorithms</span>
+        <div className="space-y-1.5">
+          <span className="text-[11px] font-medium text-zinc-400 block">Algorithms to test:</span>
           <div className="flex flex-wrap gap-1.5">
-            {(Object.keys(ALGORITHM_REGISTRY) as AlgorithmId[]).map((id) => (
+            {(['astar', 'dijkstra', 'greedy', 'bfs'] as AlgorithmId[]).map((id) => (
               <button
                 key={id}
                 onClick={() => toggleAlgo(id)}
                 className={`px-2.5 py-1 rounded text-xs font-medium border transition ${
                   selectedAlgos.includes(id)
-                    ? 'bg-brand-600 text-white border-brand-500'
-                    : 'bg-slate-800 text-slate-400 border-slate-700'
+                    ? 'bg-zinc-800 text-white border-zinc-600'
+                    : 'bg-zinc-950 text-zinc-500 border-zinc-800'
                 }`}
               >
                 {ALGORITHM_REGISTRY[id].name.split(' ')[0]}
@@ -214,12 +194,12 @@ export const BenchmarkStudio: React.FC = () => {
           </div>
         </div>
 
-        {/* Grid Sizes */}
-        <div className="space-y-2">
-          <span className="font-semibold text-slate-300 block uppercase tracking-wider text-[10px]">Grid Dimensions</span>
-          <div className="flex items-center gap-2">
-            {[15, 25, 35, 50].map((sz) => (
-              <label key={sz} className="flex items-center gap-1 text-slate-300 cursor-pointer">
+        {/* Map Sizes */}
+        <div className="space-y-1.5">
+          <span className="text-[11px] font-medium text-zinc-400 block">Grid sizes:</span>
+          <div className="flex items-center gap-3">
+            {[15, 25, 35].map((sz) => (
+              <label key={sz} className="flex items-center gap-1.5 text-zinc-300 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={gridSizes.includes(sz)}
@@ -227,122 +207,79 @@ export const BenchmarkStudio: React.FC = () => {
                     if (e.target.checked) setGridSizes([...gridSizes, sz]);
                     else if (gridSizes.length > 1) setGridSizes(gridSizes.filter((s) => s !== sz));
                   }}
-                  className="rounded bg-slate-800 text-brand-600 focus:ring-0"
+                  className="rounded bg-zinc-800 text-sky-500 focus:ring-0"
                 />
-                <span>{sz}x{sz}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Obstacle Densities */}
-        <div className="space-y-2">
-          <span className="font-semibold text-slate-300 block uppercase tracking-wider text-[10px]">Obstacle Densities</span>
-          <div className="flex items-center gap-2">
-            {[0.1, 0.25, 0.35, 0.45].map((d) => (
-              <label key={d} className="flex items-center gap-1 text-slate-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={densities.includes(d)}
-                  onChange={(e) => {
-                    if (e.target.checked) setDensities([...densities, d]);
-                    else if (densities.length > 1) setDensities(densities.filter((x) => x !== d));
-                  }}
-                  className="rounded bg-slate-800 text-brand-600 focus:ring-0"
-                />
-                <span>{d * 100}%</span>
+                <span>{sz}×{sz}</span>
               </label>
             ))}
           </div>
         </div>
 
         {/* Repetitions */}
-        <div className="space-y-2">
-          <span className="font-semibold text-slate-300 block uppercase tracking-wider text-[10px]">Repetitions per Condition</span>
+        <div className="space-y-1.5">
+          <span className="text-[11px] font-medium text-zinc-400 block">Runs per size:</span>
           <select
             value={repetitions}
             onChange={(e) => setRepetitions(Number(e.target.value))}
-            className="bg-slate-800 border border-slate-700 text-white rounded p-1.5 w-full font-mono"
+            className="bg-zinc-950 border border-zinc-800 text-white rounded p-1.5 w-full text-xs"
           >
-            <option value="1">1 Run (Fast)</option>
-            <option value="3">3 Runs (Recommended)</option>
-            <option value="5">5 Runs (Statistically Rigorous)</option>
+            <option value="1">1 run (Fast)</option>
+            <option value="3">3 runs (Average)</option>
           </select>
         </div>
       </div>
 
-      {/* Measurement Charts */}
+      {/* Results Charts */}
       {records.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Runtime vs Grid Size */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg space-y-2">
-            <h4 className="text-xs font-bold text-slate-200">Execution Runtime (ms) vs Grid Dimension</h4>
-            <div className="h-64">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Runtime */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 shadow-sm space-y-2">
+            <h4 className="text-xs font-semibold text-zinc-200">Execution Time (ms) vs Map Size</h4>
+            <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={runtimeVsGridSize} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                  <XAxis dataKey="x" stroke="#64748b" fontSize={11} label={{ value: 'Grid Dimension (N×N)', position: 'insideBottom', offset: -5 }} />
-                  <YAxis stroke="#64748b" fontSize={11} />
-                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
+                <LineChart data={runtimeData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <XAxis dataKey="x" stroke="#71717a" fontSize={11} />
+                  <YAxis stroke="#71717a" fontSize={11} />
+                  <Tooltip contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', fontSize: '11px' }} />
                   <Legend wrapperStyle={{ fontSize: '11px' }} />
-                  {selectedAlgos.map((algo, i) => {
-                    const name = ALGORITHM_REGISTRY[algo].name;
-                    const colors = ['#38bdf8', '#818cf8', '#f59e0b', '#10b981', '#ec4899'];
-                    return (
-                      <Line
-                        key={algo}
-                        type="monotone"
-                        dataKey={name}
-                        stroke={colors[i % colors.length]}
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
-                      />
-                    );
-                  })}
+                  <Line type="monotone" dataKey="A*" stroke="#38bdf8" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="Dijkstra's" stroke="#c084fc" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="Greedy" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Nodes vs Density */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg space-y-2">
-            <h4 className="text-xs font-bold text-slate-200">Nodes Expanded vs Obstacle Density</h4>
-            <div className="h-64">
+          {/* Cells Checked */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 shadow-sm space-y-2">
+            <h4 className="text-xs font-semibold text-zinc-200">Cells Explored vs Obstacle Density</h4>
+            <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={nodesVsDensity} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                  <XAxis dataKey="x" stroke="#64748b" fontSize={11} />
-                  <YAxis stroke="#64748b" fontSize={11} />
-                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
+                <BarChart data={cellsCheckedData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <XAxis dataKey="x" stroke="#71717a" fontSize={11} />
+                  <YAxis stroke="#71717a" fontSize={11} />
+                  <Tooltip contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', fontSize: '11px' }} />
                   <Legend wrapperStyle={{ fontSize: '11px' }} />
-                  {selectedAlgos.map((algo, i) => {
-                    const name = ALGORITHM_REGISTRY[algo].name;
-                    const colors = ['#38bdf8', '#818cf8', '#f59e0b', '#10b981', '#ec4899'];
-                    return (
-                      <Bar
-                        key={algo}
-                        dataKey={name}
-                        fill={colors[i % colors.length]}
-                        radius={[4, 4, 0, 0]}
-                      />
-                    );
-                  })}
+                  <Bar dataKey="A*" fill="#38bdf8" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Dijkstra's" fill="#c084fc" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Greedy" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
         </div>
       ) : (
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-12 text-center text-slate-500 text-xs">
-          Click <strong className="text-slate-300">"Execute Benchmark Suite"</strong> above to run statistical evaluations across varying graph scales.
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-10 text-center text-zinc-500 text-xs">
+          Click <strong className="text-zinc-300">"Run Speed Test"</strong> above to see how A*, Dijkstra, and Greedy compare.
         </div>
       )}
     </div>
   );
 };
 
-// Helper to pivot and average data for Recharts
-function useMemoDataByField(records: BenchmarkRunRecord[], groupField: 'gridSize' | 'density', metricField: 'executionTimeMs' | 'nodesExpanded') {
+function useMemoPivotedData(records: BenchmarkRunRecord[], groupField: 'gridSize' | 'density', metricField: 'executionTimeMs' | 'nodesExpanded') {
   return React.useMemo(() => {
     if (records.length === 0) return [];
 
@@ -350,7 +287,7 @@ function useMemoDataByField(records: BenchmarkRunRecord[], groupField: 'gridSize
     const algorithms = Array.from(new Set(records.map((r) => r.algorithm)));
 
     return distinctX.map((xVal) => {
-      const row: any = { x: groupField === 'density' ? `${(Number(xVal) * 100).toFixed(0)}%` : `${xVal}×${xVal}` };
+      const row: any = { x: groupField === 'density' ? `${(Number(xVal) * 100).toFixed(0)}% walls` : `${xVal}×${xVal}` };
 
       for (const algo of algorithms) {
         const matches = records.filter((r) => r[groupField] === xVal && r.algorithm === algo);

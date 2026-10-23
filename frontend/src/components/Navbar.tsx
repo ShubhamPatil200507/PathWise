@@ -1,113 +1,88 @@
 import React from 'react';
-import {
-  Compass,
-  Scale,
-  RefreshCw,
-  Sliders,
-  BarChart3,
-  Navigation,
-  FolderOpen,
-  Server,
-  Zap,
-} from 'lucide-react';
+import { Compass, Columns2, MapPin, Gauge, RotateCcw } from 'lucide-react';
 
-export type AppViewMode =
-  | 'visualizer'
-  | 'comparison'
-  | 'dynamic'
-  | 'multicriteria'
-  | 'benchmarks'
-  | 'roadnetwork';
+export type AppViewMode = 'visualizer' | 'compare' | 'city' | 'benchmarks';
 
 interface NavbarProps {
   currentView: AppViewMode;
   onChangeView: (view: AppViewMode) => void;
-  onOpenScenarioModal: () => void;
-  backendOnline: boolean;
+  onReset: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentView,
   onChangeView,
-  onOpenScenarioModal,
-  backendOnline,
+  onReset,
 }) => {
-  const navItems: { id: AppViewMode; label: string; icon: any }[] = [
-    { id: 'visualizer', label: 'Pathfinding Lab', icon: Compass },
-    { id: 'comparison', label: 'Algorithm Comparison', icon: Scale },
-    { id: 'dynamic', label: 'Dynamic Replanning', icon: RefreshCw },
-    { id: 'multicriteria', label: 'Multi-Criteria Opt', icon: Sliders },
-    { id: 'benchmarks', label: 'Benchmark Studio', icon: BarChart3 },
-    { id: 'roadnetwork', label: 'Road Network Graph', icon: Navigation },
+  const tabs: { id: AppViewMode; label: string; icon: any }[] = [
+    { id: 'visualizer', label: 'Visualizer', icon: Compass },
+    { id: 'compare', label: 'Compare', icon: Columns2 },
+    { id: 'city', label: 'City Map', icon: MapPin },
+    { id: 'benchmarks', label: 'Speed Test', icon: Gauge },
   ];
 
   return (
-    <header className="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-2.5 shadow-xl">
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-        {/* Brand Logo & Title */}
+    <header className="border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-40">
+      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+        {/* Logo & Name */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 via-purple-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
-            <Zap className="w-5 h-5 text-white fill-white" />
+          <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400">
+            <Compass className="w-4 h-4" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-extrabold text-base tracking-tight text-white font-sans">
-                PathWise
-              </h1>
-              <span className="text-[10px] font-mono font-bold bg-brand-950 text-brand-300 border border-brand-800 px-1.5 py-0.5 rounded">
-                v2.0 PRO
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400 font-medium">
-              Intelligent Pathfinding & Optimization Platform
-            </p>
+            <span className="font-semibold text-sm text-zinc-100 tracking-tight">PathWise</span>
+            <span className="hidden sm:inline-block text-xs text-zinc-500 ml-2">Interactive pathfinding</span>
           </div>
         </div>
 
-        {/* View Switcher Tabs */}
-        <nav className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentView === item.id;
+        {/* Clean Center Navigation */}
+        <nav className="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-lg border border-zinc-800">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const active = currentView === tab.id;
             return (
               <button
-                key={item.id}
-                onClick={() => onChangeView(item.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                  isActive
-                    ? 'bg-brand-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                key={tab.id}
+                onClick={() => onChangeView(tab.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  active
+                    ? 'bg-zinc-800 text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5 shrink-0" />
-                <span>{item.label}</span>
+                <Icon className="w-3.5 h-3.5" />
+                <span>{tab.label}</span>
               </button>
             );
           })}
         </nav>
 
-        {/* Scenario Storage & Backend Status */}
-        <div className="flex items-center gap-2.5">
+        {/* Right Actions */}
+        <div className="flex items-center gap-2">
           <button
-            onClick={onOpenScenarioModal}
-            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg shadow transition"
+            onClick={onReset}
+            title="Reset exploration"
+            className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 border border-zinc-800 transition"
           >
-            <FolderOpen className="w-3.5 h-3.5 text-purple-400" />
-            <span>Scenarios</span>
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Reset</span>
           </button>
 
-          {/* Backend Online Pill */}
-          <div
-            className={`flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-lg border ${
-              backendOnline
-                ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
-                : 'bg-slate-800 text-slate-400 border-slate-700'
-            }`}
-            title={backendOnline ? 'Connected to FastAPI Backend Engine' : 'Running in Offline Local Engine Mode'}
+          <a
+            href="https://github.com/ShubhamPatil200507/PathWise"
+            target="_blank"
+            rel="noreferrer"
+            title="View source on GitHub"
+            className="p-1.5 text-zinc-400 hover:text-white rounded-md hover:bg-zinc-900 border border-zinc-800 transition"
           >
-            <Server className={`w-3.5 h-3.5 ${backendOnline ? 'text-emerald-400' : 'text-slate-500'}`} />
-            <span>{backendOnline ? 'API Active' : 'Local Engine'}</span>
-          </div>
+            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+              />
+            </svg>
+          </a>
         </div>
       </div>
     </header>

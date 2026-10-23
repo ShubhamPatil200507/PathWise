@@ -5,8 +5,6 @@ import { ControlsBar } from './components/ControlsBar';
 import { EducationalPanel } from './components/EducationalPanel';
 import { MetricsCard } from './components/MetricsCard';
 import { ComparisonView } from './components/ComparisonView';
-import { DynamicReplanningView } from './components/DynamicReplanningView';
-import { MultiCriteriaView } from './components/MultiCriteriaView';
 import { BenchmarkStudio } from './components/BenchmarkStudio';
 import { RoadNetworkView } from './components/RoadNetworkView';
 import { ScenarioModal, SavedScenario } from './components/ScenarioModal';
@@ -14,11 +12,9 @@ import { createEmptyGrid, coordKey, coordsEqual } from './core/grid';
 import { AlgorithmId, runAlgorithm } from './core/runner';
 import { GridCell, GridCoord, MovementMode, HeuristicType, SearchStepEvent, AlgorithmMetrics } from './core/types';
 import { PRESET_SCENARIOS } from './core/presets';
-import { checkBackendHealth } from './services/api';
 
 export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppViewMode>('visualizer');
-  const [backendOnline, setBackendOnline] = useState<boolean>(false);
   const [isScenarioModalOpen, setIsScenarioModalOpen] = useState<boolean>(false);
 
   // Environment Grid State
@@ -51,15 +47,6 @@ export const App: React.FC = () => {
 
   const animFrameRef = useRef<number | null>(null);
   const lastStepTimeRef = useRef<number>(0);
-
-  // Check Backend Health on Mount
-  useEffect(() => {
-    checkBackendHealth().then(setBackendOnline);
-    const timer = setInterval(() => {
-      checkBackendHealth().then(setBackendOnline);
-    }, 15000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Handle Preset Selection
   const handleSelectPreset = (presetId: string) => {
@@ -296,13 +283,12 @@ export const App: React.FC = () => {
       : null;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans">
       {/* Navigation Header */}
       <Navbar
         currentView={currentView}
         onChangeView={setCurrentView}
-        onOpenScenarioModal={() => setIsScenarioModalOpen(true)}
-        backendOnline={backendOnline}
+        onReset={handleResetExploration}
       />
 
       {/* Main Body */}
@@ -341,6 +327,7 @@ export const App: React.FC = () => {
               onClearBoard={handleClearBoard}
               speed={speed}
               onChangeSpeed={setSpeed}
+              onOpenSaveLoad={() => setIsScenarioModalOpen(true)}
             />
 
             {/* Canvas Grid View & Educational Inspector */}
@@ -386,7 +373,7 @@ export const App: React.FC = () => {
           </>
         )}
 
-        {currentView === 'comparison' && (
+        {currentView === 'compare' && (
           <ComparisonView
             rows={rows}
             cols={cols}
@@ -398,31 +385,9 @@ export const App: React.FC = () => {
           />
         )}
 
-        {currentView === 'dynamic' && (
-          <DynamicReplanningView
-            rows={rows}
-            cols={cols}
-            grid={grid}
-            start={start}
-            target={target}
-            movement={movement}
-          />
-        )}
-
-        {currentView === 'multicriteria' && (
-          <MultiCriteriaView
-            rows={rows}
-            cols={cols}
-            grid={grid}
-            start={start}
-            target={target}
-            movement={movement}
-          />
-        )}
+        {currentView === 'city' && <RoadNetworkView />}
 
         {currentView === 'benchmarks' && <BenchmarkStudio />}
-
-        {currentView === 'roadnetwork' && <RoadNetworkView />}
       </main>
 
       {/* Scenario Management Modal */}

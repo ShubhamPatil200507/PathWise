@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, Clock, CheckCircle2, XCircle, Gauge, Route, Database, Sparkles } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { AlgorithmMetrics } from '../core/types';
 
 interface MetricsCardProps {
@@ -7,91 +7,97 @@ interface MetricsCardProps {
 }
 
 export const MetricsCard: React.FC<MetricsCardProps> = ({ metrics }) => {
-  if (!metrics) {
-    return (
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg text-slate-500 text-xs text-center flex items-center justify-center min-h-[90px]">
-        Execute an algorithm to view verified performance metrics.
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow-lg">
-      <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-xs">
-        <div className="flex items-center gap-1.5 font-semibold text-slate-200">
-          <Activity className="w-4 h-4 text-brand-400" />
-          <span>Execution Performance Metrics</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {metrics.found ? (
-            <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-2 py-0.5 rounded-full">
-              <CheckCircle2 className="w-3 h-3" /> Path Found
-            </span>
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 shadow-sm space-y-3">
+      {/* Metrics Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+        {/* Status */}
+        <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 flex flex-col justify-between">
+          <span className="text-[11px] text-zinc-500 font-medium">Result</span>
+          {metrics ? (
+            metrics.found ? (
+              <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1 mt-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Path Found
+              </span>
+            ) : (
+              <span className="text-xs font-semibold text-rose-400 flex items-center gap-1 mt-1">
+                <XCircle className="w-3.5 h-3.5" /> Blocked
+              </span>
+            )
           ) : (
-            <span className="flex items-center gap-1 text-[11px] font-bold text-rose-400 bg-rose-950/80 border border-rose-800 px-2 py-0.5 rounded-full">
-              <XCircle className="w-3 h-3" /> Destination Unreachable
-            </span>
+            <span className="text-xs text-zinc-500 mt-1">Ready</span>
           )}
-          <span
-            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-              metrics.isOptimal
-                ? 'bg-purple-950/80 text-purple-300 border-purple-800'
-                : 'bg-amber-950/80 text-amber-300 border-amber-800'
-            }`}
-          >
-            {metrics.isOptimal ? 'Optimal Cost' : 'Suboptimal'}
-          </span>
         </div>
-      </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-        {/* Path Cost */}
-        <div className="bg-slate-950/80 p-2 rounded-lg border border-slate-800 text-center">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 block">Total Path Cost</span>
-          <span className="font-mono font-bold text-base text-purple-400">
-            {metrics.found ? metrics.pathCost.toFixed(2) : '—'}
+        {/* Total Cost */}
+        <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+          <span className="text-[11px] text-zinc-500 font-medium block">Total Cost</span>
+          <span className="font-mono text-base font-bold text-purple-400">
+            {metrics && metrics.found ? metrics.pathCost.toFixed(1) : '—'}
           </span>
         </div>
 
         {/* Path Length */}
-        <div className="bg-slate-950/80 p-2 rounded-lg border border-slate-800 text-center">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 block">Path Nodes / Length</span>
-          <span className="font-mono font-bold text-base text-slate-200">
-            {metrics.found ? `${metrics.pathLength} cells` : '—'}
+        <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+          <span className="text-[11px] text-zinc-500 font-medium block">Path Length</span>
+          <span className="font-mono text-base font-bold text-zinc-200">
+            {metrics && metrics.found ? `${metrics.pathLength} steps` : '—'}
           </span>
         </div>
 
-        {/* Nodes Expanded */}
-        <div className="bg-slate-950/80 p-2 rounded-lg border border-slate-800 text-center">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 block">Nodes Expanded</span>
-          <span className="font-mono font-bold text-base text-sky-400">
-            {metrics.nodesExpanded}
+        {/* Cells Checked */}
+        <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+          <span className="text-[11px] text-zinc-500 font-medium block">Cells Explored</span>
+          <span className="font-mono text-base font-bold text-sky-400">
+            {metrics ? metrics.nodesExpanded : '—'}
           </span>
         </div>
 
-        {/* Nodes Discovered */}
-        <div className="bg-slate-950/80 p-2 rounded-lg border border-slate-800 text-center">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 block">Nodes Discovered</span>
-          <span className="font-mono font-bold text-base text-blue-300">
-            {metrics.nodesDiscovered}
+        {/* Calculation Time */}
+        <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 col-span-2 sm:col-span-1">
+          <span className="text-[11px] text-zinc-500 font-medium block">Search Time</span>
+          <span className="font-mono text-base font-bold text-emerald-400">
+            {metrics ? `${metrics.executionTimeMs} ms` : '—'}
           </span>
+        </div>
+      </div>
+
+      {/* Clean Human Legend */}
+      <div className="flex flex-wrap items-center justify-between text-xs text-zinc-400 pt-2 border-t border-zinc-800/80 gap-3 px-1">
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
+            <span>Start (S)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-rose-500 inline-block" />
+            <span>Target (T)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded bg-zinc-800 border border-zinc-700 inline-block" />
+            <span>Wall</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded bg-sky-900 border border-sky-700 inline-block" />
+            <span>Water (Cost 5)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded bg-amber-950 border border-amber-800 inline-block" />
+            <span>Mud (Cost 3)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded bg-sky-500/50 inline-block" />
+            <span>Visited</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded bg-purple-500 inline-block" />
+            <span>Shortest Path</span>
+          </div>
         </div>
 
-        {/* Max Frontier Size */}
-        <div className="bg-slate-950/80 p-2 rounded-lg border border-slate-800 text-center">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 block">Peak Frontier Size</span>
-          <span className="font-mono font-bold text-base text-amber-400">
-            {metrics.maxFrontierSize}
-          </span>
-        </div>
-
-        {/* Execution Time */}
-        <div className="bg-slate-950/80 p-2 rounded-lg border border-slate-800 text-center">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 block">Algorithm Runtime</span>
-          <span className="font-mono font-bold text-base text-emerald-400">
-            {metrics.executionTimeMs} ms
-          </span>
-        </div>
+        <span className="text-[11px] text-zinc-500 hidden md:inline">
+          Tip: Click & drag on grid to draw walls. Drag S or T to move them.
+        </span>
       </div>
     </div>
   );

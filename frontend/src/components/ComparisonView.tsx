@@ -5,15 +5,9 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
   ResponsiveContainer,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
 } from 'recharts';
-import { Play, RotateCcw, CheckCircle, BarChart3, ArrowRight, ShieldCheck, Scale } from 'lucide-react';
+import { Play, Columns2, CheckCircle2, Trophy } from 'lucide-react';
 import { GridCell, GridCoord, MovementMode, HeuristicType, PathfindingResult } from '../core/types';
 import { AlgorithmId, ALGORITHM_REGISTRY, runAlgorithm } from '../core/runner';
 import { CanvasGrid } from './CanvasGrid';
@@ -37,16 +31,9 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
   movement,
   heuristic,
 }) => {
-  // Select 2 to 4 algorithms to compare
-  const [selectedAlgos, setSelectedAlgos] = useState<AlgorithmId[]>(['bfs', 'dijkstra', 'astar', 'greedy']);
-  const [results, setResults] = useState<Record<AlgorithmId, PathfindingResult | null>>({
-    bfs: null,
-    dijkstra: null,
-    astar: null,
-    greedy: null,
-    dlite: null,
-  });
-  const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [selectedAlgos, setSelectedAlgos] = useState<AlgorithmId[]>(['astar', 'dijkstra', 'greedy', 'bfs']);
+  const [results, setResults] = useState<Record<string, PathfindingResult | null>>({});
+  const [hasRun, setHasRun] = useState<boolean>(false);
 
   const toggleAlgo = (id: AlgorithmId) => {
     if (selectedAlgos.includes(id)) {
@@ -60,10 +47,8 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
     }
   };
 
-  const runAllComparisons = () => {
-    setIsRunning(true);
-    const newResults: Record<AlgorithmId, PathfindingResult | null> = { ...results };
-
+  const handleRunAll = () => {
+    const newResults: Record<string, PathfindingResult | null> = {};
     for (const algoId of selectedAlgos) {
       const res = runAlgorithm(algoId, {
         rows,
@@ -73,124 +58,131 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
         target,
         movement,
         heuristic,
-        recordEvents: false, // instant for exact benchmark measurement
+        recordEvents: false,
       });
       newResults[algoId] = res;
     }
-
     setResults(newResults);
-    setIsRunning(false);
+    setHasRun(true);
   };
 
   const chartData = useMemo(() => {
     return selectedAlgos
-      .filter((id) => results[id] !== null)
+      .filter((id) => results[id])
       .map((id) => {
         const r = results[id]!;
+        const nameMap: Record<string, string> = {
+          astar: 'A* Search',
+          dijkstra: 'Dijkstra',
+          greedy: 'Greedy',
+          bfs: 'BFS',
+          dlite: 'D* Lite',
+        };
         return {
-          name: ALGORITHM_REGISTRY[id].name.split(' ')[0], // short name
-          fullName: ALGORITHM_REGISTRY[id].name,
-          nodesExpanded: r.metrics.nodesExpanded,
-          nodesDiscovered: r.metrics.nodesDiscovered,
+          name: nameMap[id] || id,
+          cellsChecked: r.metrics.nodesExpanded,
           pathCost: r.metrics.pathCost,
-          runtimeMs: r.metrics.executionTimeMs,
-          frontierPeak: r.metrics.maxFrontierSize,
+          timeMs: r.metrics.executionTimeMs,
         };
       });
   }, [selectedAlgos, results]);
 
-  // Evidence-based analytical synthesis
-  const analysisSynthesis = useMemo(() => {
-    const executed = selectedAlgos.map((id) => results[id]).filter(Boolean) as PathfindingResult[];
-    if (executed.length < 2) return null;
-
-    const dijkstra = results['dijkstra'];
+  // Plain English Human Summary
+  const humanSummary = useMemo(() => {
+    if (!hasRun) return null;
     const astar = results['astar'];
+    const dijkstra = results['dijkstra'];
     const greedy = results['greedy'];
     const bfs = results['bfs'];
 
-    const insights: string[] = [];
+    const takeaways: string[] = [];
 
     if (astar && dijkstra) {
-      const nodeDiff = dijkstra.metrics.nodesExpanded - astar.metrics.nodesExpanded;
-      const pctSaved = Math.max(0, ((nodeDiff / dijkstra.metrics.nodesExpanded) * 100)).toFixed(1);
-      insights.push(
-        `A* explored ${pctSaved}% fewer nodes than Dijkstra (${astar.metrics.nodesExpanded} vs ${dijkstra.metrics.nodesExpanded}) while maintaining identical optimal path cost of ${astar.metrics.pathCost.toFixed(2)}.`
-      );
+      if (astar.metrics.nodesExpanded < dijkstra.metrics.nodesExpanded) {
+        const savedPct = Math.round(
+          ((dijkstra.metrics.nodesExpanded - astar.metrics.nodesExpanded) /
+            dijkstra.metrics.nodesExpanded) *
+            100
+        );
+        takeaways.push(
+          `A* was significantly more efficient than Dijkstra: it checked ${savedPct}% fewer cells (${astar.metrics.nodesExpanded} vs ${dijkstra.metrics.nodesExpanded}) while discovering the exact same shortest path cost (${astar.metrics.pathCost.toFixed(1)}).`
+        );
+      }
     }
 
     if (greedy && astar) {
       if (greedy.metrics.pathCost > astar.metrics.pathCost) {
-        const costOvershoot = (
-          ((greedy.metrics.pathCost - astar.metrics.pathCost) / astar.metrics.pathCost) *
-          100
-        ).toFixed(1);
-        insights.push(
-          `Greedy Best-First expanded rapidly (${greedy.metrics.nodesExpanded} nodes) but resulted in a suboptimal path cost overshoot of +${costOvershoot}%.`
+        takeaways.push(
+          `Greedy rushed straight toward the target and finished fast, but took an expensive detour (cost ${greedy.metrics.pathCost.toFixed(1)} vs optimal ${astar.metrics.pathCost.toFixed(1)}).`
         );
       } else {
-        insights.push(
-          `Greedy Best-First matched the optimal cost in this particular layout with ${greedy.metrics.nodesExpanded} node expansions, demonstrating pure heuristic guidance.`
+        takeaways.push(
+          `Greedy found a direct path quickly with only ${greedy.metrics.nodesExpanded} cells checked because there were no complex obstacles in its direct line of sight.`
         );
       }
     }
 
     if (bfs && dijkstra) {
       if (bfs.metrics.pathCost > dijkstra.metrics.pathCost) {
-        insights.push(
-          `BFS produced a suboptimal weighted cost of ${bfs.metrics.pathCost.toFixed(2)} vs Dijkstra's optimal ${dijkstra.metrics.pathCost.toFixed(2)} because BFS minimizes edge hops without weighting terrain resistance.`
+        takeaways.push(
+          `BFS does not understand terrain weights: it picked a route through expensive water or mud (cost ${bfs.metrics.pathCost.toFixed(1)}) because it only counts edge hops.`
         );
       }
     }
 
-    return insights;
-  }, [selectedAlgos, results]);
+    return takeaways;
+  }, [results, hasRun]);
 
   return (
     <div className="space-y-4">
-      {/* Top Bar: Selector & Execution */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg flex flex-wrap items-center justify-between gap-4">
+      {/* Header & Controls */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <Scale className="w-5 h-5 text-brand-400" />
-            Side-by-Side Synchronized Algorithm Comparison
+          <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+            <Columns2 className="w-4 h-4 text-sky-400" />
+            Compare Algorithms on the Same Map
           </h2>
-          <p className="text-xs text-slate-400">
-            Compare 2 to 4 pathfinding algorithms simultaneously on the identical environment, movement rules, and terrain costs.
+          <p className="text-xs text-zinc-400 mt-0.5">
+            Test how different algorithms behave under identical obstacles and terrain costs.
           </p>
         </div>
 
-        {/* Algorithm toggles */}
-        <div className="flex items-center gap-2">
-          {(Object.keys(ALGORITHM_REGISTRY) as AlgorithmId[]).map((id) => {
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-zinc-500 mr-1">Select:</span>
+          {(['astar', 'dijkstra', 'greedy', 'bfs'] as AlgorithmId[]).map((id) => {
             const isSelected = selectedAlgos.includes(id);
+            const labelMap: Record<string, string> = {
+              astar: 'A* Search',
+              dijkstra: 'Dijkstra',
+              greedy: 'Greedy',
+              bfs: 'BFS',
+            };
             return (
               <button
                 key={id}
                 onClick={() => toggleAlgo(id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
                   isSelected
-                    ? 'bg-brand-600 border-brand-500 text-white shadow-md'
-                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+                    ? 'bg-zinc-800 border-zinc-600 text-white shadow-sm'
+                    : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-300'
                 }`}
               >
-                {ALGORITHM_REGISTRY[id].name.split(' ')[0]}
+                {labelMap[id]}
               </button>
             );
           })}
 
           <button
-            onClick={runAllComparisons}
-            disabled={isRunning}
-            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-lg active:scale-95 transition ml-2"
+            onClick={handleRunAll}
+            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition active:scale-95 ml-2"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
-            <span>Benchmark All</span>
+            <span>Compare Now</span>
           </button>
         </div>
       </div>
 
-      {/* Synchronized Side-by-Side Map Grids */}
+      {/* Synchronized Maps */}
       <div className={`grid gap-4 ${selectedAlgos.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-4'}`}>
         {selectedAlgos.map((algoId) => {
           const res = results[algoId];
@@ -198,18 +190,18 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
           const pathList = res ? res.path : [];
 
           return (
-            <div key={algoId} className="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow-lg flex flex-col space-y-2">
-              <div className="flex items-center justify-between pb-1 border-b border-slate-800">
-                <span className="font-bold text-xs text-white">{ALGORITHM_REGISTRY[algoId].name}</span>
+            <div key={algoId} className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 shadow-sm space-y-2">
+              <div className="flex items-center justify-between pb-1.5 border-b border-zinc-800">
+                <span className="font-semibold text-xs text-white">{ALGORITHM_REGISTRY[algoId].name}</span>
                 {res && (
-                  <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800">
+                  <span className="text-[11px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-900/60">
                     {res.metrics.executionTimeMs} ms
                   </span>
                 )}
               </div>
 
-              {/* Canvas viewport */}
-              <div className="h-64 rounded-lg overflow-hidden border border-slate-800 bg-slate-950">
+              {/* Map viewport */}
+              <div className="h-60 rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950">
                 <CanvasGrid
                   rows={rows}
                   cols={cols}
@@ -228,19 +220,15 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
                 />
               </div>
 
-              {/* Metric stats card */}
-              <div className="grid grid-cols-3 gap-1 text-[11px] font-mono text-center pt-1">
-                <div className="bg-slate-950 p-1.5 rounded">
-                  <span className="text-[9px] text-slate-400 block uppercase">Cost</span>
+              {/* Quick Numbers */}
+              <div className="grid grid-cols-2 gap-2 text-xs font-mono text-center pt-1">
+                <div className="bg-zinc-950 p-2 rounded border border-zinc-800/80">
+                  <span className="text-[10px] text-zinc-500 block">Total Cost</span>
                   <span className="text-purple-400 font-bold">{res ? res.metrics.pathCost.toFixed(1) : '—'}</span>
                 </div>
-                <div className="bg-slate-950 p-1.5 rounded">
-                  <span className="text-[9px] text-slate-400 block uppercase">Nodes</span>
+                <div className="bg-zinc-950 p-2 rounded border border-zinc-800/80">
+                  <span className="text-[10px] text-zinc-500 block">Cells Checked</span>
                   <span className="text-sky-400 font-bold">{res ? res.metrics.nodesExpanded : '—'}</span>
-                </div>
-                <div className="bg-slate-950 p-1.5 rounded">
-                  <span className="text-[9px] text-slate-400 block uppercase">Frontier</span>
-                  <span className="text-amber-400 font-bold">{res ? res.metrics.maxFrontierSize : '—'}</span>
                 </div>
               </div>
             </div>
@@ -248,49 +236,38 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
         })}
       </div>
 
-      {/* Comparative Performance Charts & Table */}
-      {chartData.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Nodes Expanded Comparison */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg space-y-2">
-            <h4 className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-              <BarChart3 className="w-4 h-4 text-sky-400" />
-              Exploration Effort: Nodes Expanded vs Discovered
+      {/* Comparison Charts */}
+      {hasRun && chartData.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Cells Checked */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+            <h4 className="text-xs font-semibold text-zinc-200">
+              Cells Checked (Fewer is better)
             </h4>
-            <div className="h-56">
+            <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                  <YAxis stroke="#64748b" fontSize={11} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
-                    itemStyle={{ fontSize: '11px' }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '11px' }} />
-                  <Bar dataKey="nodesExpanded" fill="#38bdf8" name="Nodes Expanded" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="nodesDiscovered" fill="#818cf8" name="Nodes Discovered" radius={[4, 4, 0, 0]} />
+                  <XAxis dataKey="name" stroke="#71717a" fontSize={11} />
+                  <YAxis stroke="#71717a" fontSize={11} />
+                  <Tooltip contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', fontSize: '11px' }} />
+                  <Bar dataKey="cellsChecked" fill="#38bdf8" radius={[4, 4, 0, 0]} name="Cells Checked" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Path Cost & Runtime Comparison */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg space-y-2">
-            <h4 className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-              <BarChart3 className="w-4 h-4 text-purple-400" />
-              Solution Quality: Total Path Cost
+          {/* Path Cost */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+            <h4 className="text-xs font-semibold text-zinc-200">
+              Path Cost (Lower is better)
             </h4>
-            <div className="h-56">
+            <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                  <YAxis stroke="#64748b" fontSize={11} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
-                    itemStyle={{ fontSize: '11px' }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '11px' }} />
-                  <Bar dataKey="pathCost" fill="#a855f7" name="Total Path Cost" radius={[4, 4, 0, 0]} />
+                  <XAxis dataKey="name" stroke="#71717a" fontSize={11} />
+                  <YAxis stroke="#71717a" fontSize={11} />
+                  <Tooltip contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', fontSize: '11px' }} />
+                  <Bar dataKey="pathCost" fill="#c084fc" radius={[4, 4, 0, 0]} name="Total Cost" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -298,18 +275,18 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
         </div>
       )}
 
-      {/* Synthesis Report */}
-      {analysisSynthesis && analysisSynthesis.length > 0 && (
-        <div className="bg-slate-900/90 border border-brand-800/60 rounded-xl p-4 shadow-lg space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-brand-300">
-            <ShieldCheck className="w-4 h-4 text-brand-400" />
-            <span>Empirical Algorithmic Interpretation</span>
+      {/* Plain English Takeaways */}
+      {humanSummary && humanSummary.length > 0 && (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-2">
+          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
+            <Trophy className="w-4 h-4 text-emerald-400" />
+            <span>Summary & Key Takeaways</span>
           </div>
-          <div className="space-y-1.5 text-xs text-slate-300 leading-relaxed">
-            {analysisSynthesis.map((point, idx) => (
+          <div className="space-y-1.5 text-xs text-zinc-300 leading-relaxed">
+            {humanSummary.map((item, idx) => (
               <p key={idx} className="flex items-start gap-2">
-                <span className="text-brand-400 font-bold">•</span>
-                <span>{point}</span>
+                <span className="text-emerald-400 font-bold">•</span>
+                <span>{item}</span>
               </p>
             ))}
           </div>

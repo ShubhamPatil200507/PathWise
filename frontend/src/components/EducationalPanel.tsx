@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, CheckCircle, Info, Calculator, ListOrdered, GitBranch } from 'lucide-react';
+import { Compass, Info, CheckCircle2 } from 'lucide-react';
 import { AlgorithmId, ALGORITHM_REGISTRY } from '../core/runner';
 import { SearchStepEvent } from '../core/types';
 
@@ -13,6 +13,34 @@ interface EducationalPanelProps {
   hoverCoord: { r: number; c: number } | null;
 }
 
+const PLAIN_ENGLISH_EXPLANATIONS: Record<AlgorithmId, { summary: string; howItWorks: string; guarantee: string }> = {
+  astar: {
+    summary: 'Smart Search (A*)',
+    howItWorks: 'A* combines the actual distance traveled with an estimate of how far remains. It aims directly toward the goal like an arrow, exploring far fewer cells than Dijkstra.',
+    guarantee: 'Guaranteed to find the shortest possible path as long as the heuristic does not overestimate.',
+  },
+  dijkstra: {
+    summary: "Dijkstra's Algorithm",
+    howItWorks: 'Dijkstra expands outward in concentric rings like ripples in a pond. It always checks the closest unexplored cell first.',
+    guarantee: 'Guaranteed to find the lowest-cost path, even across tricky terrain like water and mud.',
+  },
+  bfs: {
+    summary: 'Breadth-First Search (BFS)',
+    howItWorks: 'BFS checks cells level by level in a simple first-in, first-out queue. It ignores terrain weights like mud or water.',
+    guarantee: 'Finds the path with the fewest hops, but not necessarily the lowest total terrain cost.',
+  },
+  greedy: {
+    summary: 'Greedy Best-First Search',
+    howItWorks: 'Greedy only looks at estimated distance to the goal. It rushes straight forward and can get stuck behind walls.',
+    guarantee: 'Very fast, but does NOT guarantee the shortest path.',
+  },
+  dlite: {
+    summary: 'D* Lite (Dynamic Replanner)',
+    howItWorks: 'Designed for robots and game units. When a new wall blocks the active route, D* Lite repairs only the broken section without restarting from scratch.',
+    guarantee: 'Guaranteed optimal path with instant real-time rerouting.',
+  },
+};
+
 export const EducationalPanel: React.FC<EducationalPanelProps> = ({
   algorithm,
   currentStepEvent,
@@ -22,126 +50,97 @@ export const EducationalPanel: React.FC<EducationalPanelProps> = ({
   closedSetSize,
   hoverCoord,
 }) => {
-  const info = ALGORITHM_REGISTRY[algorithm];
+  const guide = PLAIN_ENGLISH_EXPLANATIONS[algorithm] || PLAIN_ENGLISH_EXPLANATIONS.astar;
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl flex flex-col h-full space-y-4">
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 shadow-sm flex flex-col h-full space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
         <div className="flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-brand-400" />
-          <h3 className="font-semibold text-sm text-slate-100">Educational Inspector</h3>
+          <Compass className="w-4 h-4 text-sky-400" />
+          <h3 className="font-semibold text-xs text-zinc-100">Algorithm Inspector</h3>
         </div>
-        <span className="text-[11px] font-mono bg-brand-950 text-brand-300 border border-brand-800/80 px-2 py-0.5 rounded-full">
-          Step {stepIndex} / {totalSteps}
-        </span>
-      </div>
-
-      {/* Algorithm Theory & Complexity Card */}
-      <div className="bg-slate-950/70 border border-slate-800 rounded-lg p-3 space-y-1.5">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-white">{info.name}</span>
-          <span
-            className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${
-              info.guaranteesOptimality
-                ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                : 'bg-amber-950 text-amber-400 border border-amber-800'
-            }`}
-          >
-            {info.guaranteesOptimality ? 'Strictly Optimal' : 'Suboptimal / Heuristic'}
+        {totalSteps > 0 && (
+          <span className="text-[11px] font-mono text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded">
+            Step {stepIndex} of {totalSteps}
           </span>
+        )}
+      </div>
+
+      {/* Plain English Guide */}
+      <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800/80 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-white">{guide.summary}</span>
         </div>
-        <p className="text-xs text-slate-400 leading-relaxed">{info.description}</p>
-        <div className="flex items-center gap-4 pt-1 text-[11px] text-slate-400 font-mono">
-          <span>Time: <strong className="text-slate-200">{info.timeComplexity}</strong></span>
-          <span>Space: <strong className="text-slate-200">{info.spaceComplexity}</strong></span>
+        <p className="text-xs text-zinc-400 leading-relaxed">{guide.howItWorks}</p>
+        <div className="pt-1 text-[11px] text-zinc-300 flex items-start gap-1.5">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+          <span className="leading-snug">{guide.guarantee}</span>
         </div>
       </div>
 
-      {/* Real-time State Breakdown */}
-      <div className="bg-slate-950/70 border border-slate-800 rounded-lg p-3 space-y-3 flex-1 flex flex-col justify-between">
+      {/* Live Step Numbers */}
+      <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800/80 space-y-2.5 flex-1 flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300 mb-2">
-            <Calculator className="w-4 h-4 text-purple-400" />
-            <span>Real-time Node Evaluation</span>
-          </div>
+          <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-2">
+            Current Step
+          </span>
 
           {currentStepEvent ? (
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="bg-slate-900 p-2 rounded border border-slate-800">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Inspected Node</span>
-                  <span className="font-mono text-sm font-bold text-white">
-                    ({currentStepEvent.coord.r}, {currentStepEvent.coord.c})
-                  </span>
-                </div>
-                <div className="bg-slate-900 p-2 rounded border border-slate-800">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Event Action</span>
-                  <span className="font-mono text-xs font-semibold uppercase text-brand-400">
-                    {currentStepEvent.type}
-                  </span>
-                </div>
+            <div className="space-y-2 text-xs">
+              <div className="bg-zinc-900 p-2 rounded border border-zinc-800 flex justify-between items-center">
+                <span className="text-zinc-400">Examining Cell:</span>
+                <span className="font-mono font-bold text-white">
+                  Row {currentStepEvent.coord.r}, Col {currentStepEvent.coord.c}
+                </span>
               </div>
 
-              {/* Mathematical Values */}
-              <div className="bg-slate-900/90 p-2.5 rounded border border-slate-800 space-y-1 font-mono text-xs">
+              <div className="bg-zinc-900 p-2.5 rounded border border-zinc-800 space-y-1.5 font-mono text-[11px]">
                 {currentStepEvent.g !== undefined && (
-                  <div className="flex justify-between items-center text-slate-300">
-                    <span className="text-slate-400">g(n) [Cost from start]:</span>
-                    <span className="text-emerald-400 font-bold">{currentStepEvent.g.toFixed(2)}</span>
+                  <div className="flex justify-between items-center text-zinc-300">
+                    <span className="text-zinc-400">Distance from start (g):</span>
+                    <span className="text-emerald-400 font-bold">{currentStepEvent.g.toFixed(1)}</span>
                   </div>
                 )}
                 {currentStepEvent.h !== undefined && (
-                  <div className="flex justify-between items-center text-slate-300">
-                    <span className="text-slate-400">h(n) [Heuristic to goal]:</span>
-                    <span className="text-amber-400 font-bold">{currentStepEvent.h.toFixed(2)}</span>
+                  <div className="flex justify-between items-center text-zinc-300">
+                    <span className="text-zinc-400">Estimated to goal (h):</span>
+                    <span className="text-amber-400 font-bold">{currentStepEvent.h.toFixed(1)}</span>
                   </div>
                 )}
                 {currentStepEvent.f !== undefined && (
-                  <div className="flex justify-between items-center border-t border-slate-800 pt-1 text-white">
-                    <span className="text-purple-300 font-semibold">f(n) = g + h:</span>
-                    <span className="text-purple-400 font-extrabold text-sm">{currentStepEvent.f.toFixed(2)}</span>
+                  <div className="flex justify-between items-center border-t border-zinc-800 pt-1 text-white">
+                    <span className="text-purple-300">Total priority score (f):</span>
+                    <span className="text-purple-400 font-extrabold">{currentStepEvent.f.toFixed(1)}</span>
                   </div>
                 )}
               </div>
-
-              {/* Algorithmic Reason */}
-              {currentStepEvent.explanation && (
-                <div className="bg-slate-900/80 p-2 rounded border border-slate-800/80">
-                  <div className="flex items-start gap-1.5 text-xs text-slate-300">
-                    <Info className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
-                    <span className="leading-snug">{currentStepEvent.explanation}</span>
-                  </div>
-                </div>
-              )}
             </div>
           ) : (
-            <div className="text-center py-6 text-xs text-slate-500">
-              Run or step through an algorithm to inspect real-time mathematical state transitions.
-            </div>
+            <p className="text-xs text-zinc-500 py-4 text-center leading-relaxed">
+              Click <strong className="text-zinc-300">"Start"</strong> or <strong className="text-zinc-300">"Step"</strong> above to watch how this algorithm searches the grid cell by cell.
+            </p>
           )}
         </div>
 
-        {/* Frontier & Explored Counts */}
-        <div className="pt-2 border-t border-slate-800 grid grid-cols-2 gap-2 text-center text-xs">
-          <div className="bg-slate-900/60 p-1.5 rounded">
-            <span className="text-[10px] text-slate-400 block">Frontier (Open)</span>
+        {/* Counts */}
+        <div className="pt-2 border-t border-zinc-800 grid grid-cols-2 gap-2 text-center text-xs">
+          <div className="bg-zinc-900 p-2 rounded border border-zinc-800">
+            <span className="text-[10px] text-zinc-400 block">Waiting in Queue</span>
             <span className="font-mono font-bold text-amber-400 text-sm">{openSetSize}</span>
           </div>
-          <div className="bg-slate-900/60 p-1.5 rounded">
-            <span className="text-[10px] text-slate-400 block">Explored (Closed)</span>
+          <div className="bg-zinc-900 p-2 rounded border border-zinc-800">
+            <span className="text-[10px] text-zinc-400 block">Cells Visited</span>
             <span className="font-mono font-bold text-sky-400 text-sm">{closedSetSize}</span>
           </div>
         </div>
       </div>
 
-      {/* Hover Readout */}
-      {hoverCoord && (
-        <div className="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-lg flex items-center justify-between text-xs font-mono text-slate-300">
-          <span className="text-slate-400">Hover:</span>
-          <span>Row: {hoverCoord.r}, Col: {hoverCoord.c}</span>
-        </div>
-      )}
+      {/* Hover Coordinates Helper */}
+      <div className="text-[11px] text-zinc-500 font-mono px-1 flex justify-between">
+        <span>Cursor:</span>
+        <span>{hoverCoord ? `Row ${hoverCoord.r}, Col ${hoverCoord.c}` : 'Hover over grid'}</span>
+      </div>
     </div>
   );
 };
