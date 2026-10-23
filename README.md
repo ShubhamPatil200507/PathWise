@@ -1,11 +1,16 @@
 # PathWise — Intelligent Pathfinding, Visualization & Optimization Platform
 
-[![Build & Tests](https://img.shields.io/badge/tests-passed-emerald.svg)](https://github.com/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-purple?style=for-the-badge&logo=github)](https://shubhampatil200507.github.io/PathWise/)
+
+[![Build & Tests](https://img.shields.io/badge/tests-passed-emerald.svg)](https://github.com/ShubhamPatil200507/PathWise/actions)
 [![React](https://img.shields.io/badge/React-18-blue.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue.svg)](https://www.typescriptlang.org/)
+[![C++](https://img.shields.io/badge/C++-14%2F17-blue.svg)](https://isocpp.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-teal.svg)](https://fastapi.tiangolo.com/)
 [![Python](https://img.shields.io/badge/Python-3.9-yellow.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+> 🌐 **Live Interactive Application**: **[https://shubhampatil200507.github.io/PathWise/](https://shubhampatil200507.github.io/PathWise/)**
 
 An academically rigorous, production-grade interactive platform for graph search, algorithmic visualization, dynamic incremental replanning, multi-criteria route optimization, and empirical benchmarking.
 
