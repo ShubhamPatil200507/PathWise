@@ -1,0 +1,23 @@
+# Node / Vite
+node_modules/
+dist/
+dist-ssr/
+*.local
+.npm
+
+# Python / FastAPI
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+*.db
+.pytest_cache/
+venv/
+env/
+.env
+
+# Editor & OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
