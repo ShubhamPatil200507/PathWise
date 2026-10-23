@@ -109,9 +109,10 @@ flowchart TD
 
 ## 3. Technology Stack
 
+- **C++ Engine**: Modern C++14/C++17, Custom Templated BinaryHeap, CMake, GCC/Clang/MSVC.
 - **Frontend**: React 18, TypeScript (Strict), Vite, Tailwind CSS, Lucide Icons, HTML5 Canvas, Recharts.
 - **Backend**: Python 3.9+, FastAPI 0.115, Pydantic v2, SQLAlchemy 2.0, SQLite, Pytest, Uvicorn.
-- **Testing**: Vitest, React Testing Library, Pytest.
+- **Testing**: Vitest, React Testing Library, Pytest, C++ Native Assertions.
 
 ---
 
