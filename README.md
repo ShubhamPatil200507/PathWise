@@ -17,18 +17,19 @@ PathWise allows you to construct custom maps, draw obstacles, paint terrain with
    - Real-time step-by-step animation with pause, resume, step, and instant solve.
    - Live inspector explaining each step in plain English (showing distance from start $g$, estimated distance to goal $h$, and total score $f$).
 
-2. **Side-by-Side Algorithm Comparison**
-   - Run multiple algorithms on the exact same map simultaneously.
+2. **Side-by-Side Algorithm Comparison (All 5 Algorithms)**
+   - Run all 5 algorithms (A*, Dijkstra, BFS, Greedy, D* Lite) on the exact same map simultaneously.
    - Compare cells explored, final path cost, and execution time with clear bar charts.
    - Plain-English takeaways explaining why one algorithm performed better on that specific map.
 
-3. **City Road Navigation**
-   - Plan routes over realistic road networks connecting city landmarks.
-   - Supports arterial roads, local streets, and highways.
+3. **Live Map Navigation & Routing**
+   - Navigate real city road networks across Mumbai, New York, and London.
+   - Street, dark, and satellite tile views with turn-by-turn landmark directions.
+   - Test dynamic replanning by closing roads directly on the map to trigger D* Lite rerouting.
 
-4. **Speed & Efficiency Test**
-   - Run automated benchmarks across different map sizes and obstacle densities.
-   - Interactive charts and instant CSV download for experiments.
+4. **Speed & Efficiency Test (All 5 Algorithms)**
+   - Benchmark A*, Dijkstra, BFS, Greedy, and D* Lite across different map sizes and densities.
+   - Interactive runtime and cell expansion charts with instant CSV download.
 
 5. **Save & Load Custom Maps**
    - Save your custom mazes locally or export/import them as JSON files.

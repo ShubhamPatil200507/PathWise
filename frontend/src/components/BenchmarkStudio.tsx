@@ -12,7 +12,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { Play, Download, Gauge, Loader2 } from 'lucide-react';
-import { AlgorithmId, ALGORITHM_REGISTRY, runAlgorithm } from '../core/runner';
+import { AlgorithmId, runAlgorithm } from '../core/runner';
 import { generateRandomMap } from '../core/presets';
 
 interface BenchmarkRunRecord {
@@ -27,8 +27,22 @@ interface BenchmarkRunRecord {
   executionTimeMs: number;
 }
 
+const ALGO_OPTIONS: { id: AlgorithmId; name: string; color: string }[] = [
+  { id: 'astar', name: 'A*', color: '#38bdf8' },
+  { id: 'dijkstra', name: 'Dijkstra', color: '#c084fc' },
+  { id: 'bfs', name: 'BFS', color: '#10b981' },
+  { id: 'greedy', name: 'Greedy', color: '#f59e0b' },
+  { id: 'dlite', name: 'D* Lite', color: '#f43f5e' },
+];
+
 export const BenchmarkStudio: React.FC = () => {
-  const [selectedAlgos, setSelectedAlgos] = useState<AlgorithmId[]>(['astar', 'dijkstra', 'greedy']);
+  const [selectedAlgos, setSelectedAlgos] = useState<AlgorithmId[]>([
+    'astar',
+    'dijkstra',
+    'bfs',
+    'greedy',
+    'dlite',
+  ]);
   const [gridSizes, setGridSizes] = useState<number[]>([15, 25, 35]);
   const [densities, setDensities] = useState<number[]>([0.1, 0.25, 0.35]);
   const [repetitions, setRepetitions] = useState<number>(3);
@@ -64,6 +78,7 @@ export const BenchmarkStudio: React.FC = () => {
           const grid = generateRandomMap(size, size, density, 0.1, start, target);
 
           for (const algoId of selectedAlgos) {
+            const meta = ALGO_OPTIONS.find((a) => a.id === algoId);
             const res = runAlgorithm(algoId, {
               rows: size,
               cols: size,
@@ -75,7 +90,7 @@ export const BenchmarkStudio: React.FC = () => {
             });
 
             newRecords.push({
-              algorithm: ALGORITHM_REGISTRY[algoId].name.split(' ')[0],
+              algorithm: meta ? meta.name : algoId,
               gridSize: size,
               density,
               repetition: rep,
@@ -90,7 +105,7 @@ export const BenchmarkStudio: React.FC = () => {
             setProgress({ current: completed, total: totalRuns });
           }
 
-          await new Promise((resolve) => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 5));
         }
       }
     }
@@ -102,9 +117,22 @@ export const BenchmarkStudio: React.FC = () => {
   const runtimeData = useMemoPivotedData(records, 'gridSize', 'executionTimeMs');
   const cellsCheckedData = useMemoPivotedData(records, 'density', 'nodesExpanded');
 
+  const activeAlgoNames = React.useMemo(() => {
+    return Array.from(new Set(records.map((r) => r.algorithm)));
+  }, [records]);
+
   const handleExportCSV = () => {
     if (records.length === 0) return;
-    const headers = ['Algorithm', 'GridSize', 'ObstacleDensity', 'Repetition', 'PathFound', 'PathCost', 'CellsChecked', 'TimeMs'];
+    const headers = [
+      'Algorithm',
+      'GridSize',
+      'ObstacleDensity',
+      'Repetition',
+      'PathFound',
+      'PathCost',
+      'CellsChecked',
+      'TimeMs',
+    ];
     const rows = records.map((r) => [
       `"${r.algorithm}"`,
       r.gridSize,
@@ -121,7 +149,7 @@ export const BenchmarkStudio: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `pathwise_benchmark_results_${Date.now()}.csv`);
+    link.setAttribute('download', `pathwise_5_algos_benchmark_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -134,10 +162,10 @@ export const BenchmarkStudio: React.FC = () => {
         <div>
           <h2 className="text-sm font-semibold text-white flex items-center gap-2">
             <Gauge className="w-4 h-4 text-sky-400" />
-            Algorithm Speed & Efficiency Test
+            Algorithm Speed & Efficiency Test (5 Algorithms)
           </h2>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Test and measure algorithm speed and cell expansions across different map sizes.
+            Test and benchmark A*, Dijkstra, BFS, Greedy, and D* Lite across different map sizes and densities.
           </p>
         </div>
 
@@ -178,17 +206,21 @@ export const BenchmarkStudio: React.FC = () => {
         <div className="space-y-1.5">
           <span className="text-[11px] font-medium text-zinc-400 block">Algorithms to test:</span>
           <div className="flex flex-wrap gap-1.5">
-            {(['astar', 'dijkstra', 'greedy', 'bfs'] as AlgorithmId[]).map((id) => (
+            {ALGO_OPTIONS.map((algo) => (
               <button
-                key={id}
-                onClick={() => toggleAlgo(id)}
-                className={`px-2.5 py-1 rounded text-xs font-medium border transition ${
-                  selectedAlgos.includes(id)
-                    ? 'bg-zinc-800 text-white border-zinc-600'
-                    : 'bg-zinc-950 text-zinc-500 border-zinc-800'
+                key={algo.id}
+                onClick={() => toggleAlgo(algo.id)}
+                className={`px-2.5 py-1 rounded text-xs font-medium border transition flex items-center gap-1.5 ${
+                  selectedAlgos.includes(algo.id)
+                    ? 'bg-zinc-800 text-white border-zinc-600 shadow-sm'
+                    : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:text-zinc-300'
                 }`}
               >
-                {ALGORITHM_REGISTRY[id].name.split(' ')[0]}
+                <span
+                  className="w-1.5 h-1.5 rounded-full inline-block"
+                  style={{ backgroundColor: algo.color }}
+                />
+                <span>{algo.name}</span>
               </button>
             ))}
           </div>
@@ -235,7 +267,7 @@ export const BenchmarkStudio: React.FC = () => {
           {/* Runtime */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 shadow-sm space-y-2">
             <h4 className="text-xs font-semibold text-zinc-200">Execution Time (ms) vs Map Size</h4>
-            <div className="h-56">
+            <div className="h-60">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={runtimeData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
@@ -243,9 +275,19 @@ export const BenchmarkStudio: React.FC = () => {
                   <YAxis stroke="#71717a" fontSize={11} />
                   <Tooltip contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', fontSize: '11px' }} />
                   <Legend wrapperStyle={{ fontSize: '11px' }} />
-                  <Line type="monotone" dataKey="A*" stroke="#38bdf8" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="Dijkstra's" stroke="#c084fc" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="Greedy" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
+                  {activeAlgoNames.map((algo) => {
+                    const meta = ALGO_OPTIONS.find((a) => a.name === algo);
+                    return (
+                      <Line
+                        key={algo}
+                        type="monotone"
+                        dataKey={algo}
+                        stroke={meta?.color || '#38bdf8'}
+                        strokeWidth={2}
+                        dot={{ r: 3 }}
+                      />
+                    );
+                  })}
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -254,7 +296,7 @@ export const BenchmarkStudio: React.FC = () => {
           {/* Cells Checked */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 shadow-sm space-y-2">
             <h4 className="text-xs font-semibold text-zinc-200">Cells Explored vs Obstacle Density</h4>
-            <div className="h-56">
+            <div className="h-60">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={cellsCheckedData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
@@ -262,9 +304,17 @@ export const BenchmarkStudio: React.FC = () => {
                   <YAxis stroke="#71717a" fontSize={11} />
                   <Tooltip contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', fontSize: '11px' }} />
                   <Legend wrapperStyle={{ fontSize: '11px' }} />
-                  <Bar dataKey="A*" fill="#38bdf8" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Dijkstra's" fill="#c084fc" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Greedy" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                  {activeAlgoNames.map((algo) => {
+                    const meta = ALGO_OPTIONS.find((a) => a.name === algo);
+                    return (
+                      <Bar
+                        key={algo}
+                        dataKey={algo}
+                        fill={meta?.color || '#38bdf8'}
+                        radius={[4, 4, 0, 0]}
+                      />
+                    );
+                  })}
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -272,14 +322,18 @@ export const BenchmarkStudio: React.FC = () => {
         </div>
       ) : (
         <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-10 text-center text-zinc-500 text-xs">
-          Click <strong className="text-zinc-300">"Run Speed Test"</strong> above to see how A*, Dijkstra, and Greedy compare.
+          Click <strong className="text-zinc-300">"Run Speed Test"</strong> above to see how all 5 algorithms (A*, Dijkstra, BFS, Greedy, D* Lite) compare.
         </div>
       )}
     </div>
   );
 };
 
-function useMemoPivotedData(records: BenchmarkRunRecord[], groupField: 'gridSize' | 'density', metricField: 'executionTimeMs' | 'nodesExpanded') {
+function useMemoPivotedData(
+  records: BenchmarkRunRecord[],
+  groupField: 'gridSize' | 'density',
+  metricField: 'executionTimeMs' | 'nodesExpanded'
+) {
   return React.useMemo(() => {
     if (records.length === 0) return [];
 
@@ -287,7 +341,9 @@ function useMemoPivotedData(records: BenchmarkRunRecord[], groupField: 'gridSize
     const algorithms = Array.from(new Set(records.map((r) => r.algorithm)));
 
     return distinctX.map((xVal) => {
-      const row: any = { x: groupField === 'density' ? `${(Number(xVal) * 100).toFixed(0)}% walls` : `${xVal}×${xVal}` };
+      const row: any = {
+        x: groupField === 'density' ? `${(Number(xVal) * 100).toFixed(0)}% walls` : `${xVal}×${xVal}`,
+      };
 
       for (const algo of algorithms) {
         const matches = records.filter((r) => r[groupField] === xVal && r.algorithm === algo);

@@ -16,8 +16,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const tabs: { id: AppViewMode; label: string; icon: any }[] = [
     { id: 'visualizer', label: 'Visualizer', icon: Compass },
-    { id: 'compare', label: 'Compare', icon: Columns2 },
-    { id: 'city', label: 'City Map', icon: MapPin },
+    { id: 'compare', label: 'Compare (5 Algos)', icon: Columns2 },
+    { id: 'city', label: 'Map Navigation', icon: MapPin },
     { id: 'benchmarks', label: 'Speed Test', icon: Gauge },
   ];
 
