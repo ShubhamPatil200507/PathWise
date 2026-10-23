@@ -1,0 +1,82 @@
+algorithm,grid_size,obstacle_density,repetition,found,path_cost,nodes_expanded,nodes_discovered,max_frontier_size,execution_time_ms
+"Dijkstra's Algorithm",15,0.1,1,true,24.000,198,202,24,0.000
+"A* Search",15,0.100,1,true,24.000,28,67,40,0.000
+"Greedy Best-First Search",15,0.100,1,true,39.000,25,66,42,0.000
+"Dijkstra's Algorithm",15,0.100,2,true,24.000,194,199,22,0.000
+"A* Search",15,0.100,2,true,24.000,27,62,36,0.000
+"Greedy Best-First Search",15,0.100,2,true,26.000,27,63,37,0.000
+"Dijkstra's Algorithm",15,0.100,3,true,24.000,196,198,24,0.000
+"A* Search",15,0.100,3,true,24.000,26,65,40,0.000
+"Greedy Best-First Search",15,0.100,3,true,32.000,27,68,42,0.000
+"Dijkstra's Algorithm",15,0.250,1,true,32.000,102,109,11,0.000
+"A* Search",15,0.250,1,true,32.000,50,75,27,0.000
+"Greedy Best-First Search",15,0.250,1,true,42.000,37,58,22,0.000
+"Dijkstra's Algorithm",15,0.250,2,true,24.000,157,163,21,0.515
+"A* Search",15,0.250,2,true,24.000,26,51,26,0.000
+"Greedy Best-First Search",15,0.250,2,true,30.000,26,52,27,0.000
+"Dijkstra's Algorithm",15,0.250,3,true,38.000,133,133,17,0.000
+"A* Search",15,0.250,3,true,38.000,127,132,30,0.000
+"Greedy Best-First Search",15,0.250,3,true,54.000,38,60,23,0.000
+"Dijkstra's Algorithm",15,0.350,1,true,37.000,142,146,14,0.513
+"A* Search",15,0.350,1,true,37.000,129,143,25,0.000
+"Greedy Best-First Search",15,0.350,1,true,53.000,32,56,25,0.000
+"Dijkstra's Algorithm",15,0.350,2,true,27.000,64,67,7,0.000
+"A* Search",15,0.350,2,true,27.000,43,62,20,0.000
+"Greedy Best-First Search",15,0.350,2,true,31.000,29,55,27,0.000
+"Dijkstra's Algorithm",15,0.350,3,true,29.000,117,126,13,0.000
+"A* Search",15,0.350,3,true,29.000,87,93,28,0.000
+"Greedy Best-First Search",15,0.350,3,true,37.000,33,52,20,0.542
+"Dijkstra's Algorithm",25,0.100,1,true,48.000,555,557,41,0.000
+"A* Search",25,0.100,1,true,48.000,455,506,237,0.540
+"Greedy Best-First Search",25,0.100,1,true,63.000,55,130,76,0.000
+"Dijkstra's Algorithm",25,0.100,2,true,44.000,552,555,36,0.539
+"A* Search",25,0.100,2,true,44.000,81,148,80,0.000
+"Greedy Best-First Search",25,0.100,2,true,75.000,47,103,57,0.000
+"Dijkstra's Algorithm",25,0.100,3,true,44.000,542,543,34,0.000
+"A* Search",25,0.100,3,true,44.000,65,135,73,0.000
+"Greedy Best-First Search",25,0.100,3,true,55.000,48,109,62,0.574
+"Dijkstra's Algorithm",25,0.250,1,true,53.000,442,448,29,0.000
+"A* Search",25,0.250,1,true,53.000,206,264,67,0.000
+"Greedy Best-First Search",25,0.250,1,true,76.000,58,110,53,0.000
+"Dijkstra's Algorithm",25,0.250,2,true,44.000,446,456,26,0.000
+"A* Search",25,0.250,2,true,44.000,60,106,50,0.000
+"Greedy Best-First Search",25,0.250,2,true,53.000,51,95,45,0.000
+"Dijkstra's Algorithm",25,0.250,3,true,48.000,450,453,32,0.000
+"A* Search",25,0.250,3,true,48.000,68,117,51,0.000
+"Greedy Best-First Search",25,0.250,3,true,76.000,66,108,43,0.000
+"Dijkstra's Algorithm",25,0.350,1,true,68.000,310,311,21,0.560
+"A* Search",25,0.350,1,true,68.000,243,254,33,0.000
+"Greedy Best-First Search",25,0.350,1,true,82.000,58,98,41,0.000
+"Dijkstra's Algorithm",25,0.350,2,true,48.000,364,372,25,0.562
+"A* Search",25,0.350,2,true,48.000,108,154,51,0.000
+"Greedy Best-First Search",25,0.350,2,true,89.000,61,97,37,0.000
+"Dijkstra's Algorithm",25,0.350,3,false,0.000,73,73,9,0.000
+"A* Search",25,0.350,3,false,0.000,73,73,24,0.000
+"Greedy Best-First Search",25,0.350,3,false,0.000,73,73,21,0.000
+"Dijkstra's Algorithm",35,0.100,1,true,64.000,1109,1111,58,0.542
+"A* Search",35,0.100,1,true,64.000,97,190,103,0.531
+"Greedy Best-First Search",35,0.100,1,true,89.000,87,194,108,0.000
+"Dijkstra's Algorithm",35,0.100,2,true,64.000,1072,1077,52,0.695
+"A* Search",35,0.100,2,true,64.000,77,175,100,0.000
+"Greedy Best-First Search",35,0.100,2,true,81.000,70,164,95,0.000
+"Dijkstra's Algorithm",35,0.100,3,true,64.000,1082,1085,48,0.563
+"A* Search",35,0.100,3,true,64.000,85,178,99,0.530
+"Greedy Best-First Search",35,0.100,3,true,93.000,68,164,97,0.000
+"Dijkstra's Algorithm",35,0.250,1,false,0.000,896,896,39,0.527
+"A* Search",35,0.250,1,false,0.000,896,896,206,1.011
+"Greedy Best-First Search",35,0.250,1,false,0.000,896,896,68,0.000
+"Dijkstra's Algorithm",35,0.250,2,true,69.000,905,907,55,0.996
+"A* Search",35,0.250,2,true,69.000,284,357,100,0.000
+"Greedy Best-First Search",35,0.250,2,true,94.000,74,154,81,0.000
+"Dijkstra's Algorithm",35,0.250,3,false,0.000,22,22,4,0.000
+"A* Search",35,0.250,3,false,0.000,22,22,6,0.000
+"Greedy Best-First Search",35,0.250,3,false,0.000,22,22,7,0.000
+"Dijkstra's Algorithm",35,0.350,1,true,82.000,784,788,34,0.000
+"A* Search",35,0.350,1,true,82.000,337,390,58,0.998
+"Greedy Best-First Search",35,0.350,1,true,118.000,136,198,63,0.000
+"Dijkstra's Algorithm",35,0.350,2,false,0.000,697,697,26,1.000
+"A* Search",35,0.350,2,false,0.000,697,697,49,0.000
+"Greedy Best-First Search",35,0.350,2,false,0.000,697,697,65,0.000
+"Dijkstra's Algorithm",35,0.350,3,false,0.000,16,16,5,0.000
+"A* Search",35,0.350,3,false,0.000,16,16,6,0.000
+"Greedy Best-First Search",35,0.350,3,false,0.000,16,16,8,0.000
