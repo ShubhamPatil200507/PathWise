@@ -9,7 +9,6 @@ import { DynamicReplanningView } from './components/DynamicReplanningView';
 import { MultiCriteriaView } from './components/MultiCriteriaView';
 import { BenchmarkStudio } from './components/BenchmarkStudio';
 import { RoadNetworkView } from './components/RoadNetworkView';
-import { DocumentationView } from './components/DocumentationView';
 import { ScenarioModal, SavedScenario } from './components/ScenarioModal';
 import { createEmptyGrid, coordKey, coordsEqual } from './core/grid';
 import { AlgorithmId, runAlgorithm } from './core/runner';
@@ -424,8 +423,6 @@ export const App: React.FC = () => {
         {currentView === 'benchmarks' && <BenchmarkStudio />}
 
         {currentView === 'roadnetwork' && <RoadNetworkView />}
-
-        {currentView === 'docs' && <DocumentationView />}
       </main>
 
       {/* Scenario Management Modal */}

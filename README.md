@@ -163,19 +163,5 @@ python -m pytest tests/ -v
 
 ---
 
-## 6. Academic Documentation Index
-
-Detailed documentation files are available in the [`docs/`](docs/) directory:
-- [`problem-statement.md`](docs/problem-statement.md): Formal research question, hypotheses, and scope.
-- [`system-architecture.md`](docs/system-architecture.md): Component diagrams, dataflow, and API specifications.
-- [`algorithm-design.md`](docs/algorithm-design.md): Mathematical formulations, complexity bounds, and proofs.
-- [`testing-strategy.md`](docs/testing-strategy.md): Automated verification and quality assurance.
-- [`benchmark-methodology.md`](docs/benchmark-methodology.md): Monte-Carlo experimental design and metrics.
-- [`limitations-and-future-scope.md`](docs/limitations-and-future-scope.md): Boundary conditions and research roadmap.
-- [`viva-questions.md`](docs/viva-questions.md): Major project defense questions and answers.
-- [`project-report-outline.md`](docs/project-report-outline.md): Formal academic report outline.
-
----
-
-## 7. License
+## 6. License
 MIT License. Developed for Academic Research and Computer Science Major Project evaluation.

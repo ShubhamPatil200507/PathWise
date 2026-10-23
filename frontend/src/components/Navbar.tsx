@@ -6,7 +6,6 @@ import {
   Sliders,
   BarChart3,
   Navigation,
-  BookOpen,
   FolderOpen,
   Server,
   Zap,
@@ -18,8 +17,7 @@ export type AppViewMode =
   | 'dynamic'
   | 'multicriteria'
   | 'benchmarks'
-  | 'roadnetwork'
-  | 'docs';
+  | 'roadnetwork';
 
 interface NavbarProps {
   currentView: AppViewMode;
@@ -41,7 +39,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'multicriteria', label: 'Multi-Criteria Opt', icon: Sliders },
     { id: 'benchmarks', label: 'Benchmark Studio', icon: BarChart3 },
     { id: 'roadnetwork', label: 'Road Network Graph', icon: Navigation },
-    { id: 'docs', label: 'Academic Docs', icon: BookOpen },
   ];
 
   return (
